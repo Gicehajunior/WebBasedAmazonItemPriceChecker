@@ -3,26 +3,35 @@ from bs4 import BeautifulSoup
 import smtplib, ssl
 import time
 from includes import mail_credentials
+import os
+from dotenv import load_dotenv
+from pathlib import Path
 
-# initialize link to request all your requests
-URL='https://www.amazon.de/Sony-DigitalKamera-Touch-Display-Vollformatsensor-Kartenslots/dp/B07B4L1PQ8/ref=sr_1_3?keywords=sony+a7&qid=15661393494&s=gateway&sr=8-3'
+dotenv_path = Path("./.env")
+load_dotenv(dotenv_path=dotenv_path)
 
 # set your agent.
 header={"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'}
 
+def amazon_item_url():
+    # initialize link to request all your requests
+    URL = os.getenv('ITEM_URL') #This has to be from database, This was for test purposes.
 
-def check_price(URL, headers):
+    print(URL)
+
+    return URL
+
+def check_price(headers):
     
     #make a call to request from the above url using your user agent. 
     # returns everything you want.
-    page = requests.get(URL, headers=headers) 
+    page = requests.get(amazon_item_url(), headers=headers)
 
     soup = BeautifulSoup(page.content, 'html.parser')
 
     # print (soup.prettify())
 
-
-    title = soup.find(id = "productTitle").get_text()
+    title = soup.find_all("span", class_="product-title-word-break")[0].get_text()
     price = soup.find_all("span", class_="a-offscreen")[0].get_text()
 
     print(title)
@@ -70,7 +79,7 @@ def send_email(msg):
 
 # define the function send_mail
 def send_mail(): 
-    body = 'The price for your item with the following link fell down.' + '\n\n' + 'Kindly Checkout this link to confirm, ' + URL 
+    body = 'The price for your item with the following link fell down.' + '\n\n' + 'Kindly Checkout this link to confirm, ' + amazon_item_url() 
     
     msg = body 
 
@@ -80,7 +89,7 @@ def send_mail():
         print("Email sending Failed!")
   
 
-check_price(URL, header)
+check_price(header)
 
         
 
