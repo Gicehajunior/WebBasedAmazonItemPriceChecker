@@ -1,8 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-import smtplib
+import smtplib, ssl
 import time
-from includes import gmail_credentials
+from includes import mail_credentials
 
 # initialize link to request all your requests
 URL='https://www.amazon.de/Sony-DigitalKamera-Touch-Display-Vollformatsensor-Kartenslots/dp/B07B4L1PQ8/ref=sr_1_3?keywords=sony+a7&qid=15661393494&s=gateway&sr=8-3'
@@ -23,53 +23,62 @@ def check_price(URL, headers):
 
 
     title = soup.find(id = "productTitle").get_text()
-    price = soup.find(id = "priceblock_ourprice").get_text()
+    price = soup.find_all("span", class_="a-offscreen")[0].get_text()
+
+    print(title)
+    print(price)
     
-    converted_price = float(price[0:3])
+    converted_price = float(price[0:4])
+
+    print("\n")
+    print(converted_price)
 
     if converted_price < 496.95:
+        print("Lower Price change")
         send_mail()
-        
-    print(converted_price)
-    print(title.strip())
         
     if converted_price > 496.95:
+        print("Higher price Change")
         send_mail()
-    
+
+
+def send_email(msg):
+    try:
+        recipients = ['gicehajunior76@gmail.com']
+        emaillist = [elem.strip().split(',') for elem in recipients]
+
+        sender = mail_credentials.username() 
+
+        headers = f"""From: {sender}
+        The price for your item fell down"""
+
+        msg = headers + '\n\n' + msg
+
+        print(msg)
+
+        # Create secure connection with server and send email
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("mail.urbanviewhotel.co.ke", 465) as server:
+            server.login(sender, mail_credentials.password())
+            server.sendmail(
+                sender, emaillist, msg
+            )
+
+        return "Email sending success!"
+    except:
+        return "Email sending Failed!"
+
 # define the function send_mail
-def send_mail():
-    # either use 2-step verification to generate passwords instead of your actual email account password.
-    # set via app passwords in gmail settings.
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.ehlo()
-    server.starttls() 
-    server.ehlo()
+def send_mail(): 
+    body = 'The price for your item with the following link fell down.' + '\n\n' + 'Kindly Checkout this link to confirm, ' + URL 
+    
+    msg = body 
 
-    # login using your email and the app password
-    server.login(gmail_credentials.username, gmail_credentials.password)
-    # set subject
-    # set body
-    # set msg
-    subject = 'The price for your Camera P200 fell down'
-    body = 'Kindly Checkout this link, https://www.amazon.com/Nikon-DX-Format-3-5-5-6G-70-300mm-4-5-6-3G/dp/B07GW23M7T/ref=dp_ob_title_ce'
-
-    msg = f"Subject: {subject}\n\n{body}"
-
-    # now send the email
-    # pass the above params on the send_mail function
-    send_mail(
-        'xtianwarrior76@gmail.com',
-        'gicehajunior76@gmail.com',
-        msg
-    )
-    # print the output - whether the above successfully executed
-    print('Hello Junior, Your Camera P200 price fell down. Check your email to checkout the new price.')
-    server.quit()
-
-    while(True):
-        check_price()
-        #set time of seconds to stop execution for the check_price function.
-        time.sleep(60)
+    if send_email(msg) == "Email sending success!":
+        print("Email sending success!")
+    else:
+        print("Email sending Failed!")
+  
 
 check_price(URL, header)
 
