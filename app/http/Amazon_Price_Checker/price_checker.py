@@ -1,3 +1,5 @@
+# !/usr/bin/env php
+
 import requests
 from bs4 import BeautifulSoup
 import smtplib, ssl
@@ -73,7 +75,7 @@ def send_email(msg):
         sender = mail_credentials.username() 
 
         headers = f"""From: {sender}
-        The price for your item fell down"""
+        The status of your item on Amazon"""
 
         msg = headers + '\n\n' + msg
 
