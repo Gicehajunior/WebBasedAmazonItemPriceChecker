@@ -21,13 +21,12 @@ class Product {
     public function set_item_entities($user_in_session) {
         $this->user_in_session = $user_in_session;
 
-        if (!empty($this->product_link || !empty($this->product_current_price))) {
-            $sql = "SELECT * FROM product_entity_features WHERE item_link='$this->product_link' AND item_price='$this->product_current_price' AND id='$this->user_in_session'";
-            $result = mysqli_query($this->connection, $sql);
-            $num_rows_count = mysqli_num_rows($result);
+        if (!empty($this->product_link || !empty($this->product_current_price))) { 
+            $DB_Query = "UPDATE product_entity_features SET active='0', updated_at='" . $this->updated_at . "' WHERE item_entity_set_by='" . $this->user_in_session . "' AND active='1'";
+            $Exec = mysqli_query($this->connection, $DB_Query);
 
-            if ($num_rows_count < 0) {
-                $sql = "INSERT INTO product_entity_features (item_link, item_price, status, item_entity_set_by, created_at, updated_at) VALUES ('$this->product_link', '$this->product_current_price', '0', '$this->user_in_session', '$this->created_at', '$this->updated_at')";
+            if ($Exec) {
+                $sql = "INSERT INTO product_entity_features (item_link, item_price, status, item_entity_set_by, active, created_at, updated_at) VALUES ('$this->product_link', '$this->product_current_price', '0', '$this->user_in_session', '1', '$this->created_at', '$this->updated_at')";
                 $result = mysqli_query($this->connection, $sql);
 
                 if ($result) {
@@ -36,15 +35,8 @@ class Product {
                     echo "item entity save failed!";
                 }
             } else {
-                $DB_Query = "UPDATE product_entity_features SET item_link='" . $this->product_link . "', item_price='" . $this->product_current_price . "', updated_at='" . $this->updated_at . "' WHERE item_entity_set_by='" . $this->user_in_session . "'";
-                $Exec = mysqli_query($this->connection, $DB_Query);
-
-                if ($Exec) {
-                    echo "item entity save success!";
-                } else {
-                    echo "item entity save failed!";
-                }
-            }
+                echo "item entity save failed!";
+            } 
         } else {
             echo "All fields should not be null!";
         }

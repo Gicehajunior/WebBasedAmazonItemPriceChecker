@@ -13,3 +13,4 @@ $database_password = $_ENV['DB_PASSWORD'];
 $notification_email = $_ENV["MAIL_NOTIFICATION_EMAIL_ADDRESS"];
 $notification_email_password = $_ENV['MAIL_NOTIFICATION_PASSWORD'];
 
+$email_recipients = $_ENV['EMAIL_RECIPIENTS'];

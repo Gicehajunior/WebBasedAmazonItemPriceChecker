@@ -97,11 +97,23 @@ function admin_system_router($router) {
         $product_link = (isset($_POST['product_link'])) ? $_POST['product_link'] : NULL;
         $product_current_price = (isset($_POST['product_current_price'])) ? $_POST['product_current_price'] : NULL;
         $user_in_session = $_SESSION['id_in_session'] ? $_SESSION['id_in_session'] : NULL; 
-
+        
         $User = new Product($connection, $product_link, $product_current_price);
         $User->set_item_entities($user_in_session);
     });
 
+    $router->map('POST', '/track_price', function () {
+        require './config/.env-config/.env-loader.php';
+        require './app/http/controllers/PriceChangeRequestContoller.php';
+        require './config/database/database_connection.php';
+        session_start();
+        $connection = new Database($database_host, $database_name, $database_username, $database_password);
+        $connection = $connection->getConnection();
+        $user_in_session = $_SESSION['id_in_session'];
+
+        $Product = new PriceRequest($connection, $user_in_session);
+        $Product->track_price();
+    });
 }
 
 $match = $router->match();

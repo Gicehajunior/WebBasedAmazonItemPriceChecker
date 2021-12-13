@@ -8,10 +8,15 @@ const register_status_container = document.getElementById(
 
 const set_item_entities_request_status = document.getElementById('set-item-entities-request-status');
 
+const request_check_item_price_btn = document.getElementById('request-check-item-price-btn');
+
+const track_price_request_status = document.getElementById('track-price-request-status');
+
 document.addEventListener("DOMContentLoaded", () => {
   login_to_system();
   register_onto_system();
   set_product_entity();
+  checkPrice();
 });
 
 /*****
@@ -135,6 +140,20 @@ function set_product_entity() {
     });
   }
 }
+
+function checkPrice() {
+  if (document.body.contains(request_check_item_price_btn)) {
+    request_check_item_price_btn.addEventListener('click', (event) => {
+      event.preventDefault();
+       request_check_item_price_btn.innerHTML = `<div class="spinner-border"></div>`;
+       let method = "POST";
+       let action = "/track_price";
+       let urlParams = ``;
+
+       server_request(method, action, urlParams);
+    });
+  }
+}
 // End Send Requests //
 
 // Server Response Handlers //
@@ -219,6 +238,63 @@ function handle_set_item_entity_request(response) {
 
   set_item_btn.innerHTML = 'Set';
 }
+
+function handle_track_product_price_request(response) {
+  console.log(response);
+
+  const request_check_item_price_btn = document.getElementById(
+    "request-check-item-price-btn"
+  );
+
+  request_check_item_price_btn.innerHTML = "Check Tracking Status";
+
+  if (response.includes("cURL is not installed. Install and try again.")) {
+    track_price_request_status.innerHTML = status_display(
+      "success",
+      "Oops, An unexpected error happened!"
+    );
+  } else if (
+    response.includes("Seems no available item set!") ||
+    response.includes("unable to parse the URL")
+  ) {
+    track_price_request_status.innerHTML = status_display(
+      "error",
+      "Oops, An unexpected error occurred. Please try again later!"
+    );
+  } else if (response.includes("sent mail success")) {
+    track_price_request_status.innerHTML = status_display(
+      "error",
+      "Notification Status of your product sent to your email successfully. Kindly check on your email."
+    );
+  } else {
+    track_price_request_status.innerHTML = status_display(
+      "error",
+      "Oops, An unexpected error happened. Please try again later!"
+    );
+  }
+}
+
+function display_toast(status, time, message) {
+  toastr.options.newestOnTop = true;
+  toastr.options.timeOut = time;
+  toastr.options.extendedTimeOut = 0;
+  toastr.options.progressBar = true;
+  toastr.options.rtl = false;
+  toastr.options.closeButton = true;
+  toastr.options.closeMethod = "fadeOut";
+  toastr.options.closeDuration = 300;
+  toastr.options.closeEasing = "swing";
+  toastr.options.preventDuplicates = true;
+
+  if (status == "success") {
+    toastr.success(message);
+  } else if (status == "warning") {
+    toastr.warning(message);
+  } else if (status == "error") {
+    toastr.error(message);
+  }
+}
+
 // End of Server Response Handlers //
 
 /*******
@@ -228,7 +304,7 @@ function handle_set_item_entity_request(response) {
  *    ~ @action
  *    ~ @urlParams
  */
-function server_request(method, action, urlParams) {
+function server_request(method, action, urlParams='') {
   let xhttp = new XMLHttpRequest();
 
   xhttp.onreadystatechange = function () {
@@ -243,6 +319,8 @@ function server_request(method, action, urlParams) {
         handle_register_request(this.responseText);
       } else if (this.responseURL.includes("/set-product-entity")) {
         handle_set_item_entity_request(this.responseText);
+      } else if (this.responseURL.includes("/track_price")) {
+        handle_track_product_price_request(this.responseText);
       } else {
         console.log(this.responseText);
       }
