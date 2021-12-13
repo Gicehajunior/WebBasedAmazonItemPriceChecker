@@ -136,7 +136,7 @@ class PriceRequest {
 
         $set_from_Header_name = 'AMAZON PRICE TRACKER';
         $set_from_email = $notification_email;
-        $set_to_user_emails = [$email_recipients];
+        $set_to_user_emails = explode(", ", $email_recipients);
         $subject =  strtoupper($status);
         $message = '
                         ' . $string_paragraph_email_text . '
