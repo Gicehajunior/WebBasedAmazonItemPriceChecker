@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   register_onto_system();
   set_product_entity();
   checkPrice();
+  generate_track_price_report_if_exists();
 });
 
 /*****
@@ -115,6 +116,7 @@ function register_onto_system() {
 function set_product_entity() {
   const valid_item_link = document.getElementById('valid-item-link');
   const product_current_price = document.getElementById('product-current-price');
+  const product_desired_price = document.getElementById('product-desired-price');
   const set_item_btn = document.getElementById('set-item');
 
   if (document.body.contains(set_item_btn)) {
@@ -123,7 +125,8 @@ function set_product_entity() {
 
       if (
         valid_item_link.value.length == 0 ||
-        product_current_price.value.length == 0
+        product_current_price.value.length == 0 ||
+        product_desired_price.value.length == 0
       ) {
         set_item_entities_request_status.innerHTML = status_display(
           "error",
@@ -133,7 +136,7 @@ function set_product_entity() {
         set_item_btn.innerHTML = `<div class="spinner-border"></div>`;
         let method = "POST";
         let action = "/set-product-entity";
-        let urlParams = `product_link=${valid_item_link.value}&product_current_price=${product_current_price.value}`;
+        let urlParams = `product_link=${valid_item_link.value}&product_current_price=${product_current_price.value}&product_desired_price=${product_desired_price.value}`;
 
         server_request(method, action, urlParams);
       }
@@ -153,6 +156,30 @@ function checkPrice() {
        server_request(method, action, urlParams);
     });
   }
+}
+
+function generate_track_price_report_if_exists() {
+  const generate_track_price_report_btn = document.getElementById(
+    "generate-track-price-report-btn"
+  );
+  const start_date = document.getElementById('start_date');
+  const end_date = document.getElementById('end_date');
+
+   const track_price_report_tbody = document.getElementById(
+     "track-price-report-tbody"
+   );
+
+  generate_track_price_report_btn.addEventListener('click', (event) => {
+    event.preventDefault();
+    
+    track_price_report_tbody.innerHTML = `<tr><td style="color: red;text-align: center;" colspan="6"><div style="font-size: 15rem;" class="spinner-border"></div></tr></td>`;
+
+    let method = "GET";
+    let action = `/fetch_report?start_date=${start_date.value}&end_date=${end_date.value}`;
+    let urlParams = ``;
+
+    server_request(method, action, urlParams);
+  });
 }
 // End Send Requests //
 
@@ -274,6 +301,58 @@ function handle_track_product_price_request(response) {
   }
 }
 
+
+function handle_report_fetch_request(response) {
+  // console.log(response);
+
+  const track_price_report_tbody = document.getElementById(
+    "track-price-report-tbody"
+  );
+  let result = "";
+  
+  if (response.includes("item_target_price")) {
+    const response_object = JSON.parse(response);
+    console.log(response_object);
+
+    response_object.forEach((response) => {
+      console.log(response);
+
+      result += `<tr>
+                  <td style="text-align: left;">${response.item_link}</td>
+                  <td style="text-align: left;">${(response.item_price == 'null') ? (0).toFixed(2) : Number(response.item_price).toFixed(2)}</td>
+                  <td style="text-align: left;">${
+                    (response.item_target_price == 'null') ? (0).toFixed(2) : Number(response.item_target_price).toFixed(2)
+                  }</td>
+                  <td style="text-align: left;">${
+                    response.status == 0
+                      ? "Price Normal"
+                      : response.status == 1
+                      ? "Price Down from Normal"
+                      : response.status == 2
+                      ? "Price Up from Normal"
+                      : ""
+                  }</td>
+                  <td style="text-align: left;">${response.created_at}</td>
+                  <td style="text-align: left;">${response.updated_at}</td>
+                </tr>`;
+    });
+  } else if (response.includes("date fields cannot be null!")) {
+    result = `<tr>
+                <td style="color: red;text-align: center;" colspan="6">Please, Fill in dates to have a specified report!</td>
+              </tr>`;
+  } else if (response.includes("report is null")) {
+    result = `<tr>
+                <td style="color: red;text-align: center;" colspan="6">No available report. If report is available, will appear here!</td>
+              </tr>`;
+  } else {
+    result = `<tr>
+                <td style="color: red;text-align: center;" colspan="6">No available report. If report is available, will appear here!</td>
+              </tr>`;
+  }
+ 
+  track_price_report_tbody.innerHTML = result;
+}
+
 function display_toast(status, time, message) {
   toastr.options.newestOnTop = true;
   toastr.options.timeOut = time;
@@ -321,6 +400,8 @@ function server_request(method, action, urlParams='') {
         handle_set_item_entity_request(this.responseText);
       } else if (this.responseURL.includes("/track_price")) {
         handle_track_product_price_request(this.responseText);
+      } else if (this.responseURL.includes("/fetch_report")) {
+        handle_report_fetch_request(this.responseText);
       } else {
         console.log(this.responseText);
       }

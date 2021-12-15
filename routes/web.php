@@ -96,15 +96,15 @@ function admin_system_router($router) {
 
         $product_link = (isset($_POST['product_link'])) ? $_POST['product_link'] : NULL;
         $product_current_price = (isset($_POST['product_current_price'])) ? $_POST['product_current_price'] : NULL;
+        $product_desired_price = (isset($_POST['product_desired_price'])) ? $_POST['product_desired_price'] : NULL;
         $user_in_session = $_SESSION['id_in_session'] ? $_SESSION['id_in_session'] : NULL; 
-        
-        $User = new Product($connection, $product_link, $product_current_price);
+        $User = new Product($connection, $product_link, $product_current_price, $product_desired_price);
         $User->set_item_entities($user_in_session);
     });
 
     $router->map('POST', '/track_price', function () {
         require './config/.env-config/.env-loader.php';
-        require './app/http/controllers/PriceChangeRequestContoller.php';
+        require './app/http/controllers/PriceChangeRequestController.php';
         require './config/database/database_connection.php';
         session_start();
         $connection = new Database($database_host, $database_name, $database_username, $database_password);
@@ -114,6 +114,22 @@ function admin_system_router($router) {
         $Product = new PriceRequest($connection, $user_in_session);
         $Product->track_price();
     });
+
+    $router->map('GET', '/fetch_report', function () {
+        require './config/.env-config/.env-loader.php';
+        require './app/http/controllers/ReportController.php';
+        require './config/database/database_connection.php';
+        session_start();
+        $connection = new Database($database_host, $database_name, $database_username, $database_password);
+        $connection = $connection->getConnection();
+
+        $user_in_session = $_SESSION['id_in_session'];
+        $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : '';
+        $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : '';
+
+        $report = new Report($connection, $user_in_session);
+        $report->fetch_track_price_report($start_date, $end_date);
+    });  
 }
 
 $match = $router->match();

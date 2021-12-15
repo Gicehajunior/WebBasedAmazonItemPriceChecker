@@ -4,17 +4,19 @@
 class Product {
     public $product_link;
     public $product_current_price;
+    public $product_target_price;
 
     public $connection;
     public $user_in_session;
     public $created_at;
     public $updated_at;
 
-    public function __construct($connection, $product_link, $product_current_price)
+    public function __construct($connection, $product_link, $product_current_price, $product_target_price)
     {
         $this->connection = $connection; 
         $this->product_link = $product_link;
         $this->product_current_price = $product_current_price;
+        $this->product_target_price = $product_target_price;
         $this->created_at = $this->updated_at = date("Y-m-d H:i:s");
     }
 
@@ -26,7 +28,7 @@ class Product {
             $Exec = mysqli_query($this->connection, $DB_Query);
 
             if ($Exec) {
-                $sql = "INSERT INTO product_entity_features (item_link, item_price, status, item_entity_set_by, active, created_at, updated_at) VALUES ('$this->product_link', '$this->product_current_price', '0', '$this->user_in_session', '1', '$this->created_at', '$this->updated_at')";
+                $sql = "INSERT INTO product_entity_features (item_link, item_price, item_target_price, status, item_entity_set_by, active, created_at, updated_at) VALUES ('$this->product_link', '$this->product_current_price', '$this->product_target_price', '0', '$this->user_in_session', '1', '$this->created_at', '$this->updated_at')";
                 $result = mysqli_query($this->connection, $sql);
 
                 if ($result) {
