@@ -38,10 +38,10 @@ class PriceRequest {
         if ($num_rows_count > 0) {
             while ($row = mysqli_fetch_assoc($result)) { 
                 $item_link = $row['item_link'];
-                $item_price = $row['item_price'];
+                $item_target_price = $row['item_target_price'];
                 $item_entity_set_by = $row['item_entity_set_by'];
 
-                return [$item_link, $item_price, $item_entity_set_by];
+                return [$item_link, $item_target_price, $item_entity_set_by];
             }
         } else {
             return "Seems no available item set!";
