@@ -9,7 +9,7 @@ admin_system_router($router);
 function sessionize_app()
 {
     session_start();
-    ($_SESSION['id_in_session'] <= 0) ? header('Location: login?log=booted out successfully') : '';
+    ($_SESSION['id_in_session'] <= 0) ? header('Location: /?log=booted out successfully') : '';
 }
 
 
@@ -22,12 +22,114 @@ function admin_system_router($router) {
      * GET Requests
      */
     // admin system login route
-    $router->map('GET', '/login', function () {
-        require '<div class="">
-        <config>
-        <div class="env-config">.env-loader.php';
+    $router->map('GET', '/', function () {
+        require './config/.env-config/.env-loader.php';
         require './resources/auth/login.php';
     });
+
+    $router->map('GET', '/register', function () {
+        require './config/.env-config/.env-loader.php';
+        require './resources/auth/register.php';
+    });
+
+    $router->map('GET', '/dashboard', function () {
+        sessionize_app();
+        require './config/.env-config/.env-loader.php';
+        require './resources/views/dashboard.php';
+    });
+
+    $router->map('POST', '/login', function () { 
+        require './config/.env-config/.env-loader.php';
+        require './app/http/auth/AuthController.php';
+        require './config/database/database_connection.php';
+
+        $connection = new Database($database_host, $database_name, $database_username, $database_password);
+        $connection = $connection->getConnection();
+
+        $email = (isset($_POST['email'])) ? $_POST['email'] : NULL;
+        $password = (isset($_POST['password'])) ? $_POST['password'] : NULL;
+
+        $User = new Auth($connection, $email, $password);
+        $User->login();
+    });
+
+    $router->map('POST', '/register', function () {
+        require './config/.env-config/.env-loader.php';
+        require './app/http/auth/AuthController.php';
+        require './config/database/database_connection.php';
+
+        $connection = new Database($database_host, $database_name, $database_username, $database_password);
+        $connection = $connection->getConnection();
+
+        $username = (isset($_POST['username'])) ? $_POST['username'] : NULL;
+        $email = (isset($_POST['email'])) ? $_POST['email'] : NULL;
+        $password = (isset($_POST['password'])) ? $_POST['password'] : NULL;
+        $confirmation_password = (isset($_POST['cpassword'])) ? $_POST['cpassword'] : NULL;
+
+        $User = new Auth($connection, $email, $password);
+        $User->register($username, $confirmation_password);
+    });
+
+    $router->map('GET', '/logout', function () {
+        require './config/.env-config/.env-loader.php';
+        require './app/http/auth/AuthController.php';
+        require './config/database/database_connection.php';
+
+        $connection = new Database($database_host, $database_name, $database_username, $database_password);
+        $connection = $connection->getConnection();
+
+        $email = (isset($_POST['email'])) ? $_POST['email'] : NULL;
+        $password = (isset($_POST['password'])) ? $_POST['password'] : NULL;
+
+        $User = new Auth($connection, $email, $password);
+        $User->logout();
+        sessionize_app();
+    });
+
+    $router->map('POST', '/set-product-entity', function () {
+        require './config/.env-config/.env-loader.php';
+        require './app/http/controllers/ProductController.php';
+        require './config/database/database_connection.php';
+        session_start();
+        $connection = new Database($database_host, $database_name, $database_username, $database_password);
+        $connection = $connection->getConnection();
+
+        $product_link = (isset($_POST['product_link'])) ? $_POST['product_link'] : NULL;
+        $product_current_price = (isset($_POST['product_current_price'])) ? $_POST['product_current_price'] : NULL;
+        $product_desired_price = (isset($_POST['product_desired_price'])) ? $_POST['product_desired_price'] : NULL;
+        $user_in_session = $_SESSION['id_in_session'] ? $_SESSION['id_in_session'] : NULL; 
+        $User = new Product($connection, $product_link, $product_current_price, $product_desired_price);
+        $User->set_item_entities($user_in_session);
+    });
+
+    $router->map('POST', '/track_price', function () {
+        require './config/.env-config/.env-loader.php';
+        require './app/http/controllers/PriceChangeRequestController.php';
+        require './config/database/database_connection.php';
+        session_start();
+        $connection = new Database($database_host, $database_name, $database_username, $database_password);
+        $connection = $connection->getConnection();
+        $user_in_session = $_SESSION['id_in_session'];
+
+        $Product = new PriceRequest($connection, $user_in_session);
+        $Product->track_price();
+    });
+
+    $router->map('GET', '/fetch_report', function () {
+        require './config/.env-config/.env-loader.php';
+        require './app/http/controllers/ReportController.php';
+        require './config/database/database_connection.php';
+        session_start();
+        $connection = new Database($database_host, $database_name, $database_username, $database_password);
+        $connection = $connection->getConnection();
+
+        $user_in_session = $_SESSION['id_in_session'];
+        $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : '';
+        $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : '';
+
+        $report = new Report($connection, $user_in_session);
+        $report->fetch_track_price_report($start_date, $end_date);
+    });  
 }
 
 $match = $router->match();

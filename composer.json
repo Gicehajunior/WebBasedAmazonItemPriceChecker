@@ -16,7 +16,8 @@
         "setasign/fpdi": "^2.3",
         "setasign/fpdf": "^1.8",
         "setasign/fpdi-protection": "^2.0",
-        "shuchkin/simplexlsx": "^0.8.27"
+        "shuchkin/simplexlsx": "^0.8.27",
+        "paquettg/php-html-parser": "dev-master"
     },
     "require-dev": {
         "vlucas/phpdotenv": "5.4.x-dev"
